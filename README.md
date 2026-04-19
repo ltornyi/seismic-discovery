@@ -44,3 +44,7 @@ one where your custom properties will be and then store the teamsite id in the `
 ### List custom properties
 
 Review and run `04list-props.js` to list the two custom properties called `experiementalparent` and `experiementalchild`.
+
+### Update a custom property
+
+Review and run `05update-prop.js` to update the custom property `experimentalchild` by adding/removing a new value and changing the cascading logic rules. The new value is C4 and the new rule is: if experiementalparent = P2 -> experimentalchild = C2 or C3 or C4.

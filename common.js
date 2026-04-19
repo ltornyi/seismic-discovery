@@ -59,3 +59,82 @@ export const listTeamsites = async (token) => {
   
   return response.data;
 }
+
+export const buildDomainValuePayload = (arrElements) => {
+  return arrElements.map((element, index) => ({
+    id: element.id,
+    value: element.value,
+    order: index + 1
+  }));
+}
+
+export const buildCascadePayload = (id, controllerPropertyId, cascades) => {
+  // Group cascades by controllerValueId
+  const groupedByControllerValue = cascades.reduce((acc, cascade) => {
+    const { controllerValueId, allowedValueId } = cascade;
+    if (!acc[controllerValueId]) {
+      acc[controllerValueId] = [];
+    }
+    acc[controllerValueId].push(allowedValueId);
+    return acc;
+  }, {});
+
+  const matches = Object.entries(groupedByControllerValue).map(([controllerValueId, allowedValueIds]) => ({
+    match: {
+      conditions: [{
+        attribute: `traits.customProperties.fields.properties.${controllerPropertyId}.value.valueId`,
+        operator: "Equal",
+        value: controllerValueId
+      }],
+      filters: [],
+      operator: "And",
+    },
+    possibleValueIds: allowedValueIds
+  }));
+
+  return [{
+    id,
+    name: "Logic 1",
+    ruleType: null,
+    controllerId: controllerPropertyId,
+    isAutoSelect: true,
+    matches
+  }];
+}
+
+export const buildCustomPropertyPayload = (id, name, order, teamSites, domainOfValues, valueCascading, lastUpdateUserId) => {
+  return {
+    domainOfValues,
+    valueCascading: valueCascading[0] ? [JSON.stringify(valueCascading[0])] : [],
+    lastUpdateUserId,
+    order,
+    id,
+    name,
+    propertyType: 'multi-select',
+    scopes: {
+      content: {
+        isRequired: false,
+        isRequiredForPublishing: false
+      }
+    },
+    teamSites: {
+      [teamSites]: {
+        order: 0,
+        isVisibleInDocCenter: true
+      }
+    }
+  }
+}
+
+export const updateCustomProperty = async (token, propertyId, updateData) => {
+  const url = `https://api.seismic.com/custom-property/v1/customProperties/${propertyId}`;
+
+  const response = await axios.put(url, updateData, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    }
+  });
+
+  return response.data;
+}
